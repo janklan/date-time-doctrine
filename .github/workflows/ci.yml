@@ -46,11 +46,18 @@ jobs:
           - "8.4"
           - "8.5"
           - "8.6"
+        brick-date-time-version:
+          - "0.6"
+          - "0.7"
+          - "0.8"
+          - "0.9"
+          - "0.10"
         deps:
           - "lowest"
           - "highest"
         include:
           - php-version: "8.5"
+            brick-date-time-version: "0.10"
             deps: "highest"
             coverage: "xdebug"
 
@@ -63,6 +70,11 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
           coverage: ${{ matrix.coverage || 'none' }}
+
+      - name: Restrict brick/date-time version
+        run: composer require --no-update "brick/date-time:$BRICK_DATE_TIME_CONSTRAINT"
+        env:
+          BRICK_DATE_TIME_CONSTRAINT: ${{ matrix.brick-date-time-version }}
 
       - name: Install composer dependencies
         uses: ramsey/composer-install@v3
@@ -82,45 +94,3 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         if: ${{ matrix.coverage == 'xdebug' }}
-
-  phpunit-php-8-2:
-    name: PHPUnit
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version:
-          - "8.2"
-        brick-date-time-version:
-          - "0.6"
-          - "0.7"
-          - "0.8"
-          - "0.9"
-          - "0.10"
-        deps:
-          - "lowest"
-          - "highest"
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php-version }}
-          coverage: none
-
-      - name: Restrict brick/date-time version
-        run: composer require --no-update "brick/date-time:$BRICK_DATE_TIME_CONSTRAINT"
-        env:
-          BRICK_DATE_TIME_CONSTRAINT: ${{ matrix.brick-date-time-version }}
-
-      - name: Install composer dependencies
-        uses: ramsey/composer-install@v3
-        with:
-          dependency-versions: ${{ matrix.deps }}
-
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit
